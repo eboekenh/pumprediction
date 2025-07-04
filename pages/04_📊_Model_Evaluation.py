@@ -17,12 +17,66 @@ import os
 st.set_page_config(page_title="Model Evaluation", page_icon="📊", layout="wide")
 
 def load_preprocessed_data():
-    """Load preprocessed data from session state"""
+    """Load preprocessed data from files or session state"""
     try:
+        # First try to load from session state
         if 'preprocessed_train' in st.session_state and 'preprocessed_test' in st.session_state:
             return st.session_state.preprocessed_train, st.session_state.preprocessed_test
+        
+        # If not in session state, load from files and preprocess
+        train_path = "artifacts/train.csv"
+        test_path = "artifacts/test.csv"
+        preprocessor_path = "artifacts/preprocessor.pkl"
+        
+        if os.path.exists(train_path) and os.path.exists(test_path) and os.path.exists(preprocessor_path):
+            # Load the data
+            train_df = pd.read_csv(train_path)
+            test_df = pd.read_csv(test_path)
+            
+            # Load preprocessor
+            preprocessor = load_object(preprocessor_path)
+            
+            # Separate features and target
+            X_train = train_df.drop(['status_group', 'id'], axis=1, errors='ignore')
+            y_train = train_df['status_group'] if 'status_group' in train_df.columns else None
+            
+            X_test = test_df.drop(['status_group', 'id'], axis=1, errors='ignore') 
+            y_test = test_df['status_group'] if 'status_group' in test_df.columns else None
+            
+            if y_train is None or y_test is None:
+                st.error("Target column 'status_group' not found in data files.")
+                return None, None
+            
+            # Transform the data
+            X_train_processed = preprocessor.transform(X_train)
+            X_test_processed = preprocessor.transform(X_test)
+            
+            # Convert target to numeric if needed
+            from src.utils import load_object
+            label_encoder_path = "artifacts/label_encoder.pkl"
+            if os.path.exists(label_encoder_path):
+                label_encoder = load_object(label_encoder_path)
+                y_train_encoded = label_encoder.transform(y_train)
+                y_test_encoded = label_encoder.transform(y_test)
+            else:
+                # Handle string labels directly
+                from sklearn.preprocessing import LabelEncoder
+                le = LabelEncoder()
+                y_train_encoded = le.fit_transform(y_train)
+                y_test_encoded = le.transform(y_test)
+            
+            # Combine features and targets
+            train_arr = np.column_stack([X_train_processed, y_train_encoded])
+            test_arr = np.column_stack([X_test_processed, y_test_encoded])
+            
+            # Store in session state for future use
+            st.session_state.preprocessed_train = train_arr
+            st.session_state.preprocessed_test = test_arr
+            
+            return train_arr, test_arr
         else:
             return None, None
+            
     except Exception as e:
         st.error(f"Error loading preprocessed data: {str(e)}")
         return None, None
