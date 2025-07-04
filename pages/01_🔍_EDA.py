@@ -164,7 +164,7 @@ def display_data_types_analysis(df):
         cat_unique = pd.DataFrame({
             'Column': categorical_cols,
             'Unique Values': [df[col].nunique() for col in categorical_cols],
-            'Most Frequent': [df[col].mode().iloc[0] if len(df[col].mode()) > 0 else 'N/A' for col in categorical_cols]
+            'Most Frequent': [str(df[col].mode().iloc[0]) if len(df[col].mode()) > 0 else 'N/A' for col in categorical_cols]
         })
         st.dataframe(cat_unique, use_container_width=True)
 
