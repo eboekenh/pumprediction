@@ -78,11 +78,11 @@ class DataTransformation:
                 ]
             )
             
-            # Categorical pipeline
+            # Categorical pipeline with cardinality limit to prevent memory issues
             cat_pipeline = Pipeline(
                 steps=[
                     ("imputer", SimpleImputer(strategy="constant", fill_value="missing")),
-                    ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+                    ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False, max_categories=20))
                 ]
             )
             
@@ -146,9 +146,25 @@ class DataTransformation:
                 input_feature_test_df = test_df.drop(columns=[target_column], axis=1)
                 target_feature_test_df = test_df[target_column]
                 
-                # Transform features
-                input_feature_train_arr = preprocessor_obj.fit_transform(input_feature_train_df)
-                input_feature_test_arr = preprocessor_obj.transform(input_feature_test_df)
+                # Transform features with progress logging
+                logging.info("Starting feature transformation...")
+                logging.info(f"Processing {len(input_feature_train_df.columns)} features")
+                
+                # Limit data size for transformation if too large
+                max_samples = 10000
+                if len(input_feature_train_df) > max_samples:
+                    logging.info(f"Large dataset detected ({len(input_feature_train_df)} samples), using sample of {max_samples} for preprocessing")
+                    train_sample = input_feature_train_df.sample(n=max_samples, random_state=42)
+                    input_feature_train_arr = preprocessor_obj.fit_transform(train_sample)
+                    input_feature_test_arr = preprocessor_obj.transform(input_feature_test_df)
+                    
+                    # Apply to full training set
+                    input_feature_train_arr = preprocessor_obj.transform(input_feature_train_df)
+                else:
+                    input_feature_train_arr = preprocessor_obj.fit_transform(input_feature_train_df)
+                    input_feature_test_arr = preprocessor_obj.transform(input_feature_test_df)
+                
+                logging.info("Feature transformation completed")
                 
                 # Encode target labels
                 label_encoder = LabelEncoder()
