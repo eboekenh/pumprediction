@@ -17,8 +17,17 @@ st.set_page_config(page_title="Geospatial Analysis", page_icon="🗺️", layout
 def load_data():
     """Load data from session state or file"""
     try:
-        if 'data_path' in st.session_state and st.session_state.data_path:
+        # Check for new session state structure first (Tanzania dataset)
+        if 'train_data_path' in st.session_state and st.session_state.train_data_path:
+            df = pd.read_csv(st.session_state.train_data_path)
+            return df
+        # Fallback to old structure
+        elif 'data_path' in st.session_state and st.session_state.data_path:
             df = pd.read_csv(st.session_state.data_path)
+            return df
+        # Try to load from processed files directly
+        elif os.path.exists("artifacts/merged_train_data.csv"):
+            df = pd.read_csv("artifacts/merged_train_data.csv")
             return df
         else:
             return None
