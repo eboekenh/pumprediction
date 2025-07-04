@@ -97,19 +97,24 @@ class AdvancedEDA:
                 results['spearman'] = spearman_corr
                 logging.info("Spearman correlation calculated")
             
-            # Cramér's V for categorical-categorical
+            # Cramér's V for categorical-categorical (optimized for large datasets)
             if len(self.categorical_cols) > 1:
-                cramers_matrix = pd.DataFrame(index=self.categorical_cols, columns=self.categorical_cols)
-                for col1 in self.categorical_cols:
-                    for col2 in self.categorical_cols:
-                        if col1 == col2:
-                            cramers_matrix.loc[col1, col2] = 1.0
-                        else:
-                            cramers_matrix.loc[col1, col2] = self.calculate_cramers_v(df[col1], df[col2])
+                # For large datasets, limit categorical correlation calculation
+                max_cat_cols = 15  # Limit to avoid timeout
+                cat_cols_subset = self.categorical_cols[:max_cat_cols]
                 
-                cramers_matrix = cramers_matrix.astype(float)
+                cramers_matrix = pd.DataFrame(index=cat_cols_subset, columns=cat_cols_subset, dtype=float)
+                for i, col1 in enumerate(cat_cols_subset):
+                    for j, col2 in enumerate(cat_cols_subset):
+                        if i == j:
+                            cramers_matrix.loc[col1, col2] = 1.0
+                        elif i < j:  # Calculate only upper triangle to save time
+                            cramers_v = self.calculate_cramers_v(df[col1], df[col2])
+                            cramers_matrix.loc[col1, col2] = cramers_v
+                            cramers_matrix.loc[col2, col1] = cramers_v  # Symmetric
+                
                 results['cramers_v'] = cramers_matrix
-                logging.info("Cramér's V calculated")
+                logging.info(f"Cramér's V calculated for {len(cat_cols_subset)} categorical columns")
             
             # Mutual information for feature-target relationships
             if self.target_col in df.columns:
@@ -122,16 +127,19 @@ class AdvancedEDA:
                     mi_numerical = mutual_info_classif(df[self.numerical_cols], y_encoded, random_state=42)
                     results['mutual_info_numerical'] = pd.Series(mi_numerical, index=self.numerical_cols)
                 
-                # Calculate mutual information for categorical features
+                # Calculate mutual information for categorical features (subset for performance)
                 if self.categorical_cols:
+                    # Use subset of categorical columns for performance
+                    cat_cols_subset = self.categorical_cols[:20]  # Limit to top 20
+                    
                     # Encode categorical variables
                     cat_encoded = pd.DataFrame()
-                    for col in self.categorical_cols:
+                    for col in cat_cols_subset:
                         le_cat = LabelEncoder()
                         cat_encoded[col] = le_cat.fit_transform(df[col].astype(str))
                     
                     mi_categorical = mutual_info_classif(cat_encoded, y_encoded, random_state=42)
-                    results['mutual_info_categorical'] = pd.Series(mi_categorical, index=self.categorical_cols)
+                    results['mutual_info_categorical'] = pd.Series(mi_categorical, index=cat_cols_subset)
                 
                 logging.info("Mutual information calculated")
             
