@@ -391,31 +391,103 @@ def main():
             with tabs[2]:
                 display_feature_importance()
         
-        # Model management
-        st.subheader("💾 Model Management")
+        # Model management and reports
+        st.subheader("💾 Model Management & Reports")
         
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         
         with col1:
+            st.write("**Model Files**")
             if os.path.exists("artifacts/model.pkl"):
                 st.success("✅ Trained model available")
                 
-                if st.button("Download Model"):
-                    with open("artifacts/model.pkl", "rb") as f:
-                        st.download_button(
-                            label="Download Model File",
-                            data=f,
-                            file_name="water_pump_model.pkl",
-                            mime="application/octet-stream"
-                        )
+                with open("artifacts/model.pkl", "rb") as f:
+                    st.download_button(
+                        label="📥 Download Model",
+                        data=f,
+                        file_name="water_pump_model.pkl",
+                        mime="application/octet-stream"
+                    )
             else:
                 st.warning("⚠️ No trained model found")
-        
-        with col2:
+                
             if os.path.exists("artifacts/preprocessor.pkl"):
                 st.success("✅ Preprocessor available")
+                
+                with open("artifacts/preprocessor.pkl", "rb") as f:
+                    st.download_button(
+                        label="📥 Download Preprocessor",
+                        data=f,
+                        file_name="water_pump_preprocessor.pkl",
+                        mime="application/octet-stream"
+                    )
             else:
                 st.warning("⚠️ No preprocessor found")
+        
+        with col2:
+            st.write("**Training Report**")
+            
+            # Look for training report files
+            import glob
+            report_files = glob.glob("artifacts/training_report_*.txt")
+            
+            if report_files:
+                # Get the most recent report
+                latest_report = max(report_files, key=os.path.getmtime)
+                st.success("✅ Training report available")
+                
+                try:
+                    with open(latest_report, "r", encoding="utf-8") as f:
+                        report_content = f.read()
+                    
+                    st.download_button(
+                        label="📊 Download Training Report",
+                        data=report_content,
+                        file_name="training_report.txt",
+                        mime="text/plain",
+                        help="Detailed report with algorithm performance, metrics, and timing"
+                    )
+                    
+                    # Show preview of report
+                    with st.expander("📋 Preview Training Report"):
+                        lines = report_content.split('\n')
+                        preview_lines = []
+                        for line in lines[:30]:  # First 30 lines
+                            preview_lines.append(line)
+                        st.text('\n'.join(preview_lines))
+                        if len(lines) > 30:
+                            st.text("... (truncated)")
+                
+                except Exception as e:
+                    st.error(f"Error reading report: {str(e)}")
+            else:
+                st.info("ℹ️ No training report found. Train a model to generate a report.")
+        
+        with col3:
+            st.write("**Model Summary**")
+            if os.path.exists("artifacts/model_report.pkl"):
+                try:
+                    from src.utils import load_object
+                    model_report = load_object("artifacts/model_report.pkl")
+                    
+                    st.metric("Best Model", model_report.get('model_name', 'Unknown'))
+                    st.metric("Accuracy", f"{model_report.get('accuracy', 0):.3f}")
+                    st.metric("F1 Score", f"{model_report.get('f1_score', 0):.3f}")
+                    
+                    # Download detailed model report
+                    import json
+                    report_json = json.dumps(model_report, indent=2, default=str)
+                    st.download_button(
+                        label="📋 Download Model Report (JSON)",
+                        data=report_json,
+                        file_name="model_report.json",
+                        mime="application/json"
+                    )
+                    
+                except Exception as e:
+                    st.error(f"Error loading model report: {str(e)}")
+            else:
+                st.info("ℹ️ No model report available")
     
     else:
         st.warning("⚠️ No data loaded. Please upload data from the main page first.")

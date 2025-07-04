@@ -2,6 +2,7 @@ import os
 import sys
 import pandas as pd
 import numpy as np
+import time
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, cross_val_score
 from sklearn.metrics import classification_report, accuracy_score, f1_score
@@ -11,12 +12,14 @@ import pickle
 from src.exception import CustomException
 from src.logger import logging
 from src.utils import save_object, evaluate_models
+from src.components.training_report import TrainingReportGenerator
 
 @dataclass
 class ModelTrainerConfig:
     """Configuration for model training"""
     trained_model_file_path: str = os.path.join("artifacts", "model.pkl")
     model_report_file_path: str = os.path.join("artifacts", "model_report.pkl")
+    training_report_file_path: str = os.path.join("artifacts", "training_report.txt")
 
 class ModelTrainer:
     """Model training component"""
@@ -37,6 +40,19 @@ class ModelTrainer:
         """
         try:
             logging.info("Starting model training")
+            
+            # Initialize training report generator
+            report_generator = TrainingReportGenerator()
+            
+            # Dataset information for report
+            dataset_info = {
+                'training_samples': len(train_array),
+                'test_samples': len(test_array),
+                'total_features': train_array.shape[1] - 1,  # Excluding target
+                'target_classes': len(np.unique(train_array[:, -1]))
+            }
+            
+            report_generator.start_training_session(dataset_info)
             
             # Split features and target
             X_train, y_train, X_test, y_test = (
@@ -74,15 +90,41 @@ class ModelTrainer:
                 "XGBoost": {}  # Use default parameters, no grid search
             }
             
-            # Evaluate models
-            model_report = evaluate_models(
-                X_train=X_train, 
-                y_train=y_train,
-                X_test=X_test, 
-                y_test=y_test,
-                models=models,
-                param=params
-            )
+            # Train and evaluate each model with timing
+            model_report = {}
+            
+            for model_name, model in models.items():
+                logging.info(f"Training {model_name} with default parameters")
+                
+                # Time the training
+                start_time = time.time()
+                model.fit(X_train, y_train)
+                training_time = time.time() - start_time
+                
+                # Evaluate model
+                test_score = model.score(X_test, y_test)
+                logging.info(f"{model_name} - Default params used")
+                logging.info(f"{model_name} - Test score: {test_score}")
+                
+                model_report[model_name] = test_score
+                
+                # Add to training report
+                hyperparams = {
+                    param: getattr(model, param) 
+                    for param in ['n_estimators', 'max_depth', 'random_state'] 
+                    if hasattr(model, param)
+                }
+                
+                report_generator.add_model_result(
+                    model_name=model_name,
+                    model=model,
+                    X_train=X_train,
+                    y_train=y_train,
+                    X_test=X_test,
+                    y_test=y_test,
+                    training_time=training_time,
+                    hyperparams=hyperparams
+                )
             
             # Get best model
             best_model_score = max(sorted(model_report.values()))
@@ -153,6 +195,15 @@ class ModelTrainer:
                 file_path=self.model_trainer_config.model_report_file_path,
                 obj=detailed_report
             )
+            
+            # Finalize training report
+            report_generator.set_best_model(best_model_name, best_model_score)
+            report_generator.finish_training_session()
+            
+            # Save training report
+            training_report_path = report_generator.save_report()
+            if training_report_path:
+                logging.info(f"Training report saved to {training_report_path}")
             
             return accuracy
             
