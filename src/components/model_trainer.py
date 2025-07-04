@@ -3,10 +3,16 @@ import sys
 import pandas as pd
 import numpy as np
 import time
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, ExtraTreesClassifier
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import VotingClassifier
 from sklearn.model_selection import GridSearchCV, cross_val_score
 from sklearn.metrics import classification_report, accuracy_score, f1_score
 from xgboost import XGBClassifier
+# from lightgbm import LGBMClassifier  # Disabled due to system library requirements
+# from catboost import CatBoostClassifier  # Disabled due to system library requirements
 from dataclasses import dataclass
 import pickle
 from src.exception import CustomException
@@ -81,13 +87,51 @@ class ModelTrainer:
                     random_state=42, 
                     eval_metric='mlogloss', 
                     n_jobs=-1
+                ),
+
+                "Support Vector Machine": SVC(
+                    kernel='rbf',
+                    C=1.0,
+                    gamma='scale',
+                    random_state=42,
+                    probability=True  # Enable probability estimates
+                ),
+                "Extra Trees": ExtraTreesClassifier(
+                    n_estimators=50,
+                    max_depth=10,
+                    min_samples_split=20,
+                    min_samples_leaf=10,
+                    random_state=42,
+                    n_jobs=-1
+                ),
+                "AdaBoost": AdaBoostClassifier(
+                    n_estimators=50,
+                    learning_rate=1.0,
+                    random_state=42
+                ),
+                "K-Nearest Neighbors": KNeighborsClassifier(
+                    n_neighbors=5,
+                    weights='distance',
+                    n_jobs=-1
+                ),
+                "Neural Network": MLPClassifier(
+                    hidden_layer_sizes=(100, 50),
+                    max_iter=100,  # Reduced for faster training
+                    random_state=42,
+                    early_stopping=True,
+                    validation_fraction=0.1
                 )
             }
             
             # Optimized parameters for large dataset - no grid search, use fixed optimal values
             params = {
                 "Random Forest": {},  # Use default parameters, no grid search
-                "XGBoost": {}  # Use default parameters, no grid search
+                "XGBoost": {},  # Use default parameters, no grid search
+                "Support Vector Machine": {},  # Use default parameters, no grid search
+                "Extra Trees": {},  # Use default parameters, no grid search
+                "AdaBoost": {},  # Use default parameters, no grid search
+                "K-Nearest Neighbors": {},  # Use default parameters, no grid search
+                "Neural Network": {}  # Use default parameters, no grid search
             }
             
             # Train and evaluate each model with timing

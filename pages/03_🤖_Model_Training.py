@@ -54,30 +54,51 @@ def display_model_selection():
             "description": "Gradient boosting framework with high performance",
             "pros": ["High accuracy", "Built-in regularization", "Handles missing values"],
             "cons": ["Requires hyperparameter tuning", "Can be slow on large datasets"]
+        },
+
+        "Support Vector Machine": {
+            "description": "Finds optimal decision boundary using support vectors",
+            "pros": ["Works well with high dimensions", "Memory efficient", "Versatile kernels"],
+            "cons": ["Slow on large datasets", "Requires feature scaling"]
+        },
+        "Extra Trees": {
+            "description": "Extremely randomized trees, faster than Random Forest",
+            "pros": ["Very fast training", "Reduces overfitting", "Good performance"],
+            "cons": ["Less accurate than Random Forest", "High variance"]
+        },
+        "AdaBoost": {
+            "description": "Adaptive boosting that focuses on misclassified samples",
+            "pros": ["Simple to implement", "Good with weak learners", "Reduces bias"],
+            "cons": ["Sensitive to noise", "Can overfit"]
+        },
+        "K-Nearest Neighbors": {
+            "description": "Classifies based on similarity to nearest neighbors",
+            "pros": ["Simple concept", "No training needed", "Works with any data"],
+            "cons": ["Slow prediction", "Sensitive to irrelevant features"]
+        },
+        "Neural Network": {
+            "description": "Multi-layer perceptron with hidden layers",
+            "pros": ["Can learn complex patterns", "Universal approximator", "Flexible"],
+            "cons": ["Requires large data", "Black box", "Many parameters"]
         }
     }
     
-    col1, col2 = st.columns(2)
+    # Display models in a grid format
+    model_names = list(models.keys())
+    cols = st.columns(3)  # 3 columns for better layout
     
-    with col1:
-        st.write("**Random Forest**")
-        st.write(models["Random Forest"]["description"])
-        st.write("**Pros:**")
-        for pro in models["Random Forest"]["pros"]:
-            st.write(f"• {pro}")
-        st.write("**Cons:**")
-        for con in models["Random Forest"]["cons"]:
-            st.write(f"• {con}")
-    
-    with col2:
-        st.write("**XGBoost**")
-        st.write(models["XGBoost"]["description"])
-        st.write("**Pros:**")
-        for pro in models["XGBoost"]["pros"]:
-            st.write(f"• {pro}")
-        st.write("**Cons:**")
-        for con in models["XGBoost"]["cons"]:
-            st.write(f"• {con}")
+    for i, model_name in enumerate(model_names):
+        with cols[i % 3]:
+            st.write(f"**{model_name}**")
+            st.write(models[model_name]["description"])
+            
+            with st.expander(f"See {model_name} details"):
+                st.write("**Avantajları:**")
+                for pro in models[model_name]["pros"]:
+                    st.write(f"• {pro}")
+                st.write("**Dezavantajları:**")
+                for con in models[model_name]["cons"]:
+                    st.write(f"• {con}")
     
     # Model selection
     selected_models = st.multiselect(

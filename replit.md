@@ -122,6 +122,8 @@ src/
 - July 04, 2025: Integrated real dataset with proper class distribution (54.3% functional, 38.4% non-functional, 7.3% needs repair)
 - July 04, 2025: Replaced unrealistic sample data with authentic Tanzania water pump competition data
 - July 04, 2025: Added realistic train-test splits and validation procedures for large-scale ML pipeline
+- July 04, 2025: Expanded algorithm selection to include 9 ML algorithms: Random Forest, XGBoost, LightGBM, CatBoost, SVM, Extra Trees, AdaBoost, KNN, and Neural Networks
+- July 04, 2025: Fixed Model Evaluation page import errors and added direct pickle loading for model artifacts
 
 ## Changelog
 - July 04, 2025. Initial setup
