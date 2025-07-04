@@ -33,8 +33,10 @@ def load_preprocessed_data():
             train_df = pd.read_csv(train_path)
             test_df = pd.read_csv(test_path)
             
-            # Load preprocessor
-            preprocessor = load_object(preprocessor_path)
+            # Load preprocessor with direct pickle loading
+            import pickle
+            with open(preprocessor_path, 'rb') as f:
+                preprocessor = pickle.load(f)
             
             # Separate features and target
             X_train = train_df.drop(['status_group', 'id'], axis=1, errors='ignore')
@@ -52,10 +54,10 @@ def load_preprocessed_data():
             X_test_processed = preprocessor.transform(X_test)
             
             # Convert target to numeric if needed
-            from src.utils import load_object
             label_encoder_path = "artifacts/label_encoder.pkl"
             if os.path.exists(label_encoder_path):
-                label_encoder = load_object(label_encoder_path)
+                with open(label_encoder_path, 'rb') as f:
+                    label_encoder = pickle.load(f)
                 y_train_encoded = label_encoder.transform(y_train)
                 y_test_encoded = label_encoder.transform(y_test)
             else:
@@ -97,8 +99,10 @@ def display_model_performance():
         return None, None, None
     
     try:
-        # Load model
-        model = load_object(model_path)
+        # Load model with direct pickle loading
+        import pickle
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
         
         # Prepare data
         X_train, y_train = train_arr[:, :-1], train_arr[:, -1]
@@ -177,7 +181,9 @@ def display_confusion_matrix(y_true, y_pred):
         # Get class labels
         label_encoder_path = "artifacts/label_encoder.pkl"
         if os.path.exists(label_encoder_path):
-            label_encoder = load_object(label_encoder_path)
+            import pickle
+            with open(label_encoder_path, 'rb') as f:
+                label_encoder = pickle.load(f)
             class_names = label_encoder.classes_
         else:
             class_names = ['functional', 'functional needs repair', 'non functional']
