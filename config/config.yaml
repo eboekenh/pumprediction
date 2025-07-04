@@ -1,0 +1,118 @@
+# Water Pump Prediction Configuration
+
+# Data Configuration
+data:
+  raw_data_path: "artifacts/raw_data.csv"
+  train_data_path: "artifacts/train.csv"
+  test_data_path: "artifacts/test.csv"
+  test_size: 0.2
+  random_state: 42
+
+# Model Configuration
+model:
+  model_save_path: "artifacts/model.pkl"
+  preprocessor_save_path: "artifacts/preprocessor.pkl"
+  label_encoder_save_path: "artifacts/label_encoder.pkl"
+  
+# Model Parameters
+models:
+  random_forest:
+    n_estimators: [100, 200, 300]
+    max_depth: [5, 10, 15, null]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
+    random_state: 42
+    
+  xgboost:
+    n_estimators: [100, 200, 300]
+    max_depth: [3, 5, 7]
+    learning_rate: [0.01, 0.1, 0.2]
+    subsample: [0.8, 0.9, 1.0]
+    random_state: 42
+    eval_metric: "mlogloss"
+
+# Training Configuration
+training:
+  cv_folds: 5
+  scoring: "accuracy"
+  n_jobs: -1
+  
+# Feature Engineering
+features:
+  numerical_features:
+    - longitude
+    - latitude
+    - construction_year
+    - population
+    - gps_height
+    - num_private
+    - district_code
+    - region_code
+    - lga_code
+    - ward_code
+    
+  categorical_features:
+    - region
+    - lga
+    - ward
+    - pump_type
+    - extraction_type
+    - extraction_type_group
+    - extraction_type_class
+    - management
+    - management_group
+    - payment
+    - payment_type
+    - water_quality
+    - quality_group
+    - quantity
+    - quantity_group
+    - source
+    - source_type
+    - source_class
+    - waterpoint_type
+    - waterpoint_type_group
+    - installer
+    - funder
+    - basin
+    - subvillage
+    - public_meeting
+    - scheme_management
+    - scheme_name
+    - permit
+    - recorded_by
+
+# Target Variable
+target:
+  column_name: "status_group"
+  classes:
+    - "functional"
+    - "functional needs repair"
+    - "non functional"
+
+# Evaluation Metrics
+evaluation:
+  primary_metric: "accuracy"
+  additional_metrics:
+    - "f1_score"
+    - "precision"
+    - "recall"
+    - "confusion_matrix"
+    - "classification_report"
+
+# Streamlit Configuration
+app:
+  title: "Water Pump Functionality Prediction"
+  page_icon: "💧"
+  layout: "wide"
+  
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "[%(asctime)s] %(lineno)d %(name)s - %(levelname)s - %(message)s"
+  
+# File Paths
+paths:
+  artifacts: "artifacts"
+  logs: "logs"
+  sample_data: "sample_data"
