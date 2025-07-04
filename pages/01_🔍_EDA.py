@@ -51,12 +51,14 @@ def display_target_distribution(df):
         st.subheader("🎯 Target Variable Distribution")
         
         # Count plot
+        status_counts = df['status_group'].value_counts().reset_index()
+        status_counts.columns = ['status', 'count']
         fig = px.bar(
-            df['status_group'].value_counts().reset_index(),
-            x='index',
-            y='status_group',
+            status_counts,
+            x='status',
+            y='count',
             title='Water Pump Status Distribution',
-            labels={'index': 'Status', 'status_group': 'Count'}
+            labels={'status': 'Status', 'count': 'Count'}
         )
         st.plotly_chart(fig, use_container_width=True)
         

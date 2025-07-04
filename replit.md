@@ -113,6 +113,15 @@ src/
 - **Pipeline Architecture**: Extensible pipeline system for adding new models
 - **Configuration Management**: Centralized configuration for easy parameter updates
 
+## Recent Changes
+- July 04, 2025: Enhanced data ingestion system to handle separate training features, labels, and test files
+- July 04, 2025: Added FileHandler component for automatic file identification and merging
+- July 04, 2025: Implemented AdvancedEDA component with comprehensive correlation analysis (Pearson, Spearman, Cramér's V, mutual information)
+- July 04, 2025: Added outlier detection using IQR, Z-score, and Isolation Forest methods
+- July 04, 2025: Integrated preprocessing recommendations and feature engineering suggestions
+- July 04, 2025: Successfully processed Tanzania water pump dataset (59,400 training records, 14,850 test records)
+- July 04, 2025: Added multiple file upload capability to main Streamlit interface
+
 ## Changelog
 - July 04, 2025. Initial setup
 

@@ -74,10 +74,97 @@ def main():
         
         # Data upload section
         st.header("📁 Data Upload")
-        uploaded_file = st.file_uploader(
-            "Upload your water pump dataset (CSV format)",
+        
+        # Multiple file upload for separate training features, labels, and test files
+        st.subheader("Option 1: Upload Multiple Files (Recommended)")
+        st.markdown("Upload separate files for training features, training labels, and test features:")
+        
+        uploaded_files = st.file_uploader(
+            "Upload training features, training labels, and test features CSV files",
             type=['csv'],
-            help="Upload a CSV file containing water pump data with features like location, pump type, etc."
+            accept_multiple_files=True,
+            help="Upload 3 CSV files: training features (X), training labels (y), and test features"
+        )
+        
+        if uploaded_files and len(uploaded_files) == 3:
+            if st.button("Process Uploaded Files", type="primary"):
+                try:
+                    # Save uploaded files temporarily
+                    temp_paths = []
+                    for i, uploaded_file in enumerate(uploaded_files):
+                        temp_path = f"temp_upload_{i}_{uploaded_file.name}"
+                        with open(temp_path, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                        temp_paths.append(temp_path)
+                    
+                    # Process files using FileHandler
+                    from src.components.file_handler import FileHandler
+                    file_handler = FileHandler()
+                    
+                    with st.spinner("Processing uploaded files..."):
+                        results = file_handler.process_uploaded_files(temp_paths)
+                    
+                    if results['success']:
+                        st.success("Files processed successfully!")
+                        
+                        # Store in session state
+                        st.session_state['file_processing_results'] = results
+                        st.session_state['data_uploaded'] = True
+                        st.session_state['train_data_path'] = results['saved_files']['merged_train']
+                        if 'test' in results['saved_files']:
+                            st.session_state['test_data_path'] = results['saved_files']['test']
+                        
+                        # Display summary
+                        st.subheader("Processing Summary")
+                        col1, col2, col3 = st.columns(3)
+                        
+                        with col1:
+                            st.metric("Training Data", f"{results['summary']['train_data_info']['shape'][0]:,} rows")
+                        
+                        with col2:
+                            st.metric("Features", f"{len(results['summary']['train_data_info']['numerical_columns']) + len(results['summary']['train_data_info']['categorical_columns'])}")
+                        
+                        with col3:
+                            if 'test_data_info' in results['summary']:
+                                st.metric("Test Data", f"{results['summary']['test_data_info']['shape'][0]:,} rows")
+                            else:
+                                st.metric("Test Data", "Not available")
+                        
+                        # Show identified files
+                        st.subheader("Identified Files")
+                        for file_type, path in results['identified_files'].items():
+                            st.write(f"**{file_type.replace('_', ' ').title()}**: {os.path.basename(path)}")
+                        
+                        # Show target distribution
+                        if 'target_distribution' in results['summary']['train_data_info']:
+                            st.subheader("Target Distribution")
+                            target_dist = results['summary']['train_data_info']['target_distribution']
+                            for status, count in target_dist.items():
+                                st.write(f"**{status}**: {count:,} ({count/sum(target_dist.values())*100:.1f}%)")
+                    
+                    else:
+                        st.error(f"Error processing files: {results['error']}")
+                    
+                    # Clean up temporary files
+                    for temp_path in temp_paths:
+                        if os.path.exists(temp_path):
+                            os.remove(temp_path)
+                            
+                except Exception as e:
+                    st.error(f"Error processing files: {str(e)}")
+        
+        elif uploaded_files and len(uploaded_files) != 3:
+            st.warning(f"Please upload exactly 3 CSV files. You uploaded {len(uploaded_files)} files.")
+        
+        st.markdown("---")
+        
+        # Single file upload option
+        st.subheader("Option 2: Upload Single Combined File")
+        uploaded_file = st.file_uploader(
+            "Upload a single CSV file with both features and target variable",
+            type=['csv'],
+            key="single_file",
+            help="Upload a CSV file containing water pump data with features and target variable"
         )
         
         if uploaded_file is not None:
