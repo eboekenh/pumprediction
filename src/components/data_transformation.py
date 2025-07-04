@@ -2,7 +2,7 @@ import sys
 import os
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder, FunctionTransformer
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
@@ -38,19 +38,37 @@ class DataTransformation:
             numerical_columns = df.select_dtypes(include=[np.number]).columns.tolist()
             categorical_columns = df.select_dtypes(include=['object']).columns.tolist()
             
+            # Handle boolean columns that are stored as object type
+            boolean_columns = []
+            remaining_categorical = []
+            
+            for col in categorical_columns:
+                unique_vals = df[col].dropna().unique()
+                # Check if column contains only boolean values (True/False)
+                if len(unique_vals) <= 2 and all(isinstance(x, bool) for x in unique_vals):
+                    boolean_columns.append(col)
+                else:
+                    remaining_categorical.append(col)
+            
+            categorical_columns = remaining_categorical
+            
             # Remove target column if present
             if 'status_group' in numerical_columns:
                 numerical_columns.remove('status_group')
             if 'status_group' in categorical_columns:
                 categorical_columns.remove('status_group')
+            if 'status_group' in boolean_columns:
+                boolean_columns.remove('status_group')
             
             # Remove ID columns
             id_columns = ['id']
             numerical_columns = [col for col in numerical_columns if col not in id_columns]
             categorical_columns = [col for col in categorical_columns if col not in id_columns]
+            boolean_columns = [col for col in boolean_columns if col not in id_columns]
             
             logging.info(f"Numerical columns: {numerical_columns}")
             logging.info(f"Categorical columns: {categorical_columns}")
+            logging.info(f"Boolean columns: {boolean_columns}")
             
             # Numerical pipeline
             num_pipeline = Pipeline(
@@ -68,11 +86,15 @@ class DataTransformation:
                 ]
             )
             
+            # Convert boolean columns to categorical by adding them back
+            # We'll handle boolean conversion in the data transformation step
+            all_categorical_columns = categorical_columns + boolean_columns
+            
             # Combine pipelines
             preprocessor = ColumnTransformer(
                 transformers=[
                     ("num", num_pipeline, numerical_columns),
-                    ("cat", cat_pipeline, categorical_columns)
+                    ("cat", cat_pipeline, all_categorical_columns)
                 ]
             )
             
@@ -101,6 +123,13 @@ class DataTransformation:
             logging.info("Data loaded for transformation")
             logging.info(f"Training data shape: {train_df.shape}")
             logging.info(f"Test data shape: {test_df.shape}")
+            
+            # Convert boolean columns to strings to avoid encoding issues
+            for col in train_df.select_dtypes(include=['object']).columns:
+                unique_vals = train_df[col].dropna().unique()
+                if len(unique_vals) <= 2 and all(isinstance(x, bool) for x in unique_vals):
+                    train_df[col] = train_df[col].astype(str)
+                    test_df[col] = test_df[col].astype(str)
             
             # Get preprocessor
             preprocessor_obj = self.get_data_transformer_object(train_df)
