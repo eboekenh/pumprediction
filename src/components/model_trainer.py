@@ -96,7 +96,7 @@ class ModelTrainer:
             logging.info(f"Best model score: {best_model_score}")
             
             if best_model_score < 0.6:
-                raise CustomException("No best model found with acceptable performance")
+                raise CustomException("No best model found with acceptable performance", sys)
             
             # Since we're using empty params (no grid search), just use the best model directly
             best_params = params[best_model_name]
@@ -158,7 +158,7 @@ class ModelTrainer:
             
         except Exception as e:
             logging.error(f"Error in model training: {str(e)}")
-            raise CustomException(e, sys)
+            raise CustomException(str(e), sys)
     
     def get_model_comparison(self, X_train, y_train, X_test, y_test):
         """
@@ -207,4 +207,4 @@ class ModelTrainer:
             
         except Exception as e:
             logging.error(f"Error in model comparison: {str(e)}")
-            raise CustomException(e, sys)
+            raise CustomException(str(e), sys)
