@@ -67,13 +67,14 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param):
             # Get parameters for current model
             params = param.get(model_name, {})
             
-            # Perform grid search
+            # Perform grid search with reduced CV for large dataset
             gs = GridSearchCV(
                 estimator=model,
                 param_grid=params,
-                cv=3,
+                cv=3,  # Keep 3-fold CV for reasonable validation
                 scoring='accuracy',
-                n_jobs=-1
+                n_jobs=-1,
+                verbose=1  # Add verbose to show progress
             )
             
             # Fit the model

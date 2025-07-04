@@ -52,19 +52,20 @@ class ModelTrainer:
                 "XGBoost": XGBClassifier(random_state=42, eval_metric='mlogloss', n_jobs=-1)
             }
             
+            # Very minimal parameter grids for large dataset (59,400 samples) - focus on speed
             params = {
                 "Random Forest": {
-                    'n_estimators': [50, 100, 200],  # Reduced to prevent overfitting
-                    'max_depth': [3, 5, 7, 10],  # More conservative max depth
-                    'min_samples_split': [5, 10, 20],  # Higher minimum to prevent overfitting
-                    'min_samples_leaf': [2, 4, 8]  # Higher minimum to prevent overfitting
+                    'n_estimators': [50],  # Single value for speed
+                    'max_depth': [10],  # Single value
+                    'min_samples_split': [10],  # Single value
+                    'min_samples_leaf': [4]  # Single value
                 },
                 "XGBoost": {
-                    'n_estimators': [50, 100, 200],  # Reduced to prevent overfitting
-                    'max_depth': [3, 4, 5],  # More conservative max depth
-                    'learning_rate': [0.01, 0.05, 0.1],  # Lower learning rates
-                    'subsample': [0.8, 0.9],  # Add regularization
-                    'colsample_bytree': [0.8, 0.9]  # Add feature sampling
+                    'n_estimators': [50],  # Single value for speed
+                    'max_depth': [5],  # Single value
+                    'learning_rate': [0.1],  # Single value
+                    'subsample': [0.8],  # Single value
+                    'colsample_bytree': [0.8]  # Single value
                 }
             }
             

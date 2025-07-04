@@ -21,8 +21,17 @@ st.set_page_config(page_title="Model Training", page_icon="🤖", layout="wide")
 def load_data():
     """Load data from session state or file"""
     try:
-        if 'data_path' in st.session_state and st.session_state.data_path:
+        # Check for new session state structure first (Tanzania dataset)
+        if 'train_data_path' in st.session_state and st.session_state.train_data_path:
+            df = pd.read_csv(st.session_state.train_data_path)
+            return df
+        # Fallback to old structure
+        elif 'data_path' in st.session_state and st.session_state.data_path:
             df = pd.read_csv(st.session_state.data_path)
+            return df
+        # Try to load from processed files directly
+        elif os.path.exists("artifacts/merged_train_data.csv"):
+            df = pd.read_csv("artifacts/merged_train_data.csv")
             return df
         else:
             return None
@@ -333,16 +342,28 @@ def main():
         # Training button
         if st.button("🚀 Start Training", type="primary"):
             if selected_models:
-                success = run_model_training(
-                    st.session_state.data_path,
-                    selected_models,
-                    tuning_method,
-                    cv_folds,
-                    tuning_intensity
-                )
+                # Get the correct data path
+                data_path = None
+                if 'train_data_path' in st.session_state:
+                    data_path = st.session_state.train_data_path
+                elif 'data_path' in st.session_state:
+                    data_path = st.session_state.data_path
+                elif os.path.exists("artifacts/merged_train_data.csv"):
+                    data_path = "artifacts/merged_train_data.csv"
                 
-                if success:
-                    st.balloons()
+                if data_path:
+                    success = run_model_training(
+                        data_path,
+                        selected_models,
+                        tuning_method,
+                        cv_folds,
+                        tuning_intensity
+                    )
+                    
+                    if success:
+                        st.balloons()
+                else:
+                    st.error("No data path found. Please load data first.")
             else:
                 st.warning("Please select at least one model to train.")
         
