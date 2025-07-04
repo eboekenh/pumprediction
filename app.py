@@ -213,29 +213,35 @@ def main():
                     st.session_state['train_data_path'] = train_data_path
                     st.session_state['test_data_path'] = test_data_path
                     
-                    # Load data to show summary
-                    df = pd.read_csv(train_data_path)
+                    # Load data to show summary (load only a sample for performance)
+                    df = pd.read_csv(train_data_path, nrows=1000)
+                    df_full_info = pd.read_csv(train_data_path, nrows=0)  # Just get column info
+                    
+                    # Get actual row count without loading full data
+                    with open(train_data_path, 'r') as f:
+                        row_count = sum(1 for line in f) - 1  # Subtract header
                     
                     st.success("✅ Tanzania water pump dataset loaded successfully!")
                     
                     # Show dataset summary
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Training Samples", f"{len(df):,}")
+                        st.metric("Training Samples", f"{row_count:,}")
                     with col2:
-                        st.metric("Features", f"{len(df.columns)-1}")
+                        st.metric("Features", f"{len(df_full_info.columns)-1}")
                     with col3:
                         if os.path.exists(test_data_path):
-                            test_df = pd.read_csv(test_data_path)
-                            st.metric("Test Samples", f"{len(test_df):,}")
+                            with open(test_data_path, 'r') as f:
+                                test_row_count = sum(1 for line in f) - 1
+                            st.metric("Test Samples", f"{test_row_count:,}")
                     
-                    # Show target distribution
+                    # Show target distribution using sample
                     if 'status_group' in df.columns:
-                        st.subheader("Target Distribution")
+                        st.subheader("Target Distribution (Sample)")
                         target_counts = df['status_group'].value_counts()
                         for status, count in target_counts.items():
                             percentage = (count / len(df)) * 100
-                            st.write(f"**{status}**: {count:,} ({percentage:.1f}%)")
+                            st.write(f"**{status}**: {count:,} ({percentage:.1f}% of sample)")
                     
                     st.rerun()
                 else:
