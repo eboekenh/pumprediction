@@ -46,27 +46,32 @@ class ModelTrainer:
                 test_array[:, -1]
             )
             
-            # Define models and their parameters (more conservative to prevent overfitting)
+            # Define models with optimized parameters for large dataset
             models = {
-                "Random Forest": RandomForestClassifier(random_state=42, n_jobs=-1),
-                "XGBoost": XGBClassifier(random_state=42, eval_metric='mlogloss', n_jobs=-1)
+                "Random Forest": RandomForestClassifier(
+                    n_estimators=100,
+                    max_depth=15, 
+                    min_samples_split=10,
+                    min_samples_leaf=4,
+                    random_state=42, 
+                    n_jobs=-1
+                ),
+                "XGBoost": XGBClassifier(
+                    n_estimators=100,
+                    max_depth=6,
+                    learning_rate=0.1,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    random_state=42, 
+                    eval_metric='mlogloss', 
+                    n_jobs=-1
+                )
             }
             
-            # Very minimal parameter grids for large dataset (59,400 samples) - focus on speed
+            # Optimized parameters for large dataset - no grid search, use fixed optimal values
             params = {
-                "Random Forest": {
-                    'n_estimators': [50],  # Single value for speed
-                    'max_depth': [10],  # Single value
-                    'min_samples_split': [10],  # Single value
-                    'min_samples_leaf': [4]  # Single value
-                },
-                "XGBoost": {
-                    'n_estimators': [50],  # Single value for speed
-                    'max_depth': [5],  # Single value
-                    'learning_rate': [0.1],  # Single value
-                    'subsample': [0.8],  # Single value
-                    'colsample_bytree': [0.8]  # Single value
-                }
+                "Random Forest": {},  # Use default parameters, no grid search
+                "XGBoost": {}  # Use default parameters, no grid search
             }
             
             # Evaluate models

@@ -141,22 +141,12 @@ class DataIngestion:
                     test_df = pd.read_csv(test_data_path)
                     logging.info(f"Real Tanzania data loaded from processed files")
                     
-                    # For training, we'll use 80% of the training data for training and 20% for validation
-                    train_df, _ = train_test_split(
+                    # Use full training dataset - split into train/validation for final evaluation
+                    train_df, test_df = train_test_split(
                         train_df, 
-                        test_size=0.2,  # Use 80% for training
+                        test_size=0.2,  # 20% for validation
                         random_state=42,
                         stratify=train_df['status_group'] if 'status_group' in train_df.columns else None
-                    )
-                    
-                    # Test set will be used for final evaluation
-                    # Note: test_df doesn't have target column, so we'll create a holdout from train_df for testing
-                    full_train = pd.read_csv(train_data_path)
-                    train_df, test_df = train_test_split(
-                        full_train, 
-                        test_size=0.2,  # 20% for final testing
-                        random_state=42,
-                        stratify=full_train['status_group'] if 'status_group' in full_train.columns else None
                     )
                 else:
                     # Fallback to sample data

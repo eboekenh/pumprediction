@@ -67,32 +67,50 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param):
             # Get parameters for current model
             params = param.get(model_name, {})
             
-            # Perform grid search with reduced CV for large dataset
-            gs = GridSearchCV(
-                estimator=model,
-                param_grid=params,
-                cv=3,  # Keep 3-fold CV for reasonable validation
-                scoring='accuracy',
-                n_jobs=-1,
-                verbose=1  # Add verbose to show progress
-            )
-            
-            # Fit the model
-            gs.fit(X_train, y_train)
-            
-            # Get best model
-            best_model = gs.best_estimator_
-            
-            # Make predictions
-            y_pred = best_model.predict(X_test)
-            
-            # Calculate score
-            test_score = accuracy_score(y_test, y_pred)
-            
-            report[model_name] = test_score
-            
-            logging.info(f"{model_name} - Best params: {gs.best_params_}")
-            logging.info(f"{model_name} - Test score: {test_score}")
+            # If no parameters for grid search, train directly
+            if not params:
+                logging.info(f"Training {model_name} with default parameters")
+                
+                # Train model directly
+                model.fit(X_train, y_train)
+                
+                # Make predictions
+                y_pred = model.predict(X_test)
+                
+                # Calculate score
+                test_score = accuracy_score(y_test, y_pred)
+                
+                report[model_name] = test_score
+                
+                logging.info(f"{model_name} - Default params used")
+                logging.info(f"{model_name} - Test score: {test_score}")
+            else:
+                # Perform grid search with reduced CV for large dataset
+                gs = GridSearchCV(
+                    estimator=model,
+                    param_grid=params,
+                    cv=3,  # Keep 3-fold CV for reasonable validation
+                    scoring='accuracy',
+                    n_jobs=-1,
+                    verbose=1  # Add verbose to show progress
+                )
+                
+                # Fit the model
+                gs.fit(X_train, y_train)
+                
+                # Get best model
+                best_model = gs.best_estimator_
+                
+                # Make predictions
+                y_pred = best_model.predict(X_test)
+                
+                # Calculate score
+                test_score = accuracy_score(y_test, y_pred)
+                
+                report[model_name] = test_score
+                
+                logging.info(f"{model_name} - Best params: {gs.best_params_}")
+                logging.info(f"{model_name} - Test score: {test_score}")
         
         return report
         
