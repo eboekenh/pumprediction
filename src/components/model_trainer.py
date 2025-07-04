@@ -46,24 +46,25 @@ class ModelTrainer:
                 test_array[:, -1]
             )
             
-            # Define models and their parameters
+            # Define models and their parameters (more conservative to prevent overfitting)
             models = {
-                "Random Forest": RandomForestClassifier(random_state=42),
-                "XGBoost": XGBClassifier(random_state=42, eval_metric='mlogloss')
+                "Random Forest": RandomForestClassifier(random_state=42, n_jobs=-1),
+                "XGBoost": XGBClassifier(random_state=42, eval_metric='mlogloss', n_jobs=-1)
             }
             
             params = {
                 "Random Forest": {
-                    'n_estimators': [100, 200, 300],
-                    'max_depth': [5, 10, 15, None],
-                    'min_samples_split': [2, 5, 10],
-                    'min_samples_leaf': [1, 2, 4]
+                    'n_estimators': [50, 100, 200],  # Reduced to prevent overfitting
+                    'max_depth': [3, 5, 7, 10],  # More conservative max depth
+                    'min_samples_split': [5, 10, 20],  # Higher minimum to prevent overfitting
+                    'min_samples_leaf': [2, 4, 8]  # Higher minimum to prevent overfitting
                 },
                 "XGBoost": {
-                    'n_estimators': [100, 200, 300],
-                    'max_depth': [3, 5, 7],
-                    'learning_rate': [0.01, 0.1, 0.2],
-                    'subsample': [0.8, 0.9, 1.0]
+                    'n_estimators': [50, 100, 200],  # Reduced to prevent overfitting
+                    'max_depth': [3, 4, 5],  # More conservative max depth
+                    'learning_rate': [0.01, 0.05, 0.1],  # Lower learning rates
+                    'subsample': [0.8, 0.9],  # Add regularization
+                    'colsample_bytree': [0.8, 0.9]  # Add feature sampling
                 }
             }
             

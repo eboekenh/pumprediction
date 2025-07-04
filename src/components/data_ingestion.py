@@ -139,7 +139,7 @@ class DataIngestion:
                     logging.info(f"Sample data loaded from: {sample_path}")
                     train_df, test_df = train_test_split(
                         df, 
-                        test_size=0.2, 
+                        test_size=0.25,  # 25% for test set (more realistic)
                         random_state=42,
                         stratify=df['status_group'] if 'status_group' in df.columns else None
                     )
