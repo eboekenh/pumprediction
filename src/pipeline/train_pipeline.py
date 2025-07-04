@@ -14,12 +14,13 @@ class TrainPipeline:
         self.data_transformation = DataTransformation()
         self.model_trainer = ModelTrainer()
     
-    def run_pipeline(self, data_path: str = None):
+    def run_pipeline(self, data_path: str = None, selected_models: list = None):
         """
         Run the complete training pipeline
         
         Args:
             data_path: Path to the dataset
+            selected_models: List of model names to train
             
         Returns:
             Model performance score
@@ -36,7 +37,7 @@ class TrainPipeline:
             )
             
             # Model training
-            model_score = self.model_trainer.initiate_model_trainer(train_arr, test_arr)
+            model_score = self.model_trainer.initiate_model_trainer(train_arr, test_arr, selected_models)
             
             logging.info("Training pipeline completed successfully")
             return model_score

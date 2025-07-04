@@ -93,17 +93,18 @@ def display_model_selection():
             st.write(models[model_name]["description"])
             
             with st.expander(f"See {model_name} details"):
-                st.write("**Avantajları:**")
+                st.write("**Advantages:**")
                 for pro in models[model_name]["pros"]:
                     st.write(f"• {pro}")
-                st.write("**Dezavantajları:**")
+                st.write("**Disadvantages:**")
                 for con in models[model_name]["cons"]:
                     st.write(f"• {con}")
     
-    # Model selection
+    # Model selection - using all available models from the dictionary
+    all_models = list(models.keys())
     selected_models = st.multiselect(
         "Select models to train:",
-        ["Random Forest", "XGBoost"],
+        all_models,
         default=["Random Forest", "XGBoost"]
     )
     
@@ -142,7 +143,7 @@ def run_model_training(data_path, selected_models, tuning_method, cv_folds, tuni
             train_pipeline = TrainPipeline()
             
             # Run training
-            model_score = train_pipeline.run_pipeline(data_path)
+            model_score = train_pipeline.run_pipeline(data_path, selected_models)
             
             st.success(f"✅ Model training completed! Best model score: {model_score:.4f}")
             

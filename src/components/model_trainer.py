@@ -33,13 +33,14 @@ class ModelTrainer:
     def __init__(self):
         self.model_trainer_config = ModelTrainerConfig()
     
-    def initiate_model_trainer(self, train_array, test_array):
+    def initiate_model_trainer(self, train_array, test_array, selected_models=None):
         """
         Initiate model training with hyperparameter tuning
         
         Args:
             train_array: Training data array
             test_array: Test data array
+            selected_models: List of model names to train (if None, trains all models)
             
         Returns:
             Best model score
@@ -133,6 +134,11 @@ class ModelTrainer:
                 "K-Nearest Neighbors": {},  # Use default parameters, no grid search
                 "Neural Network": {}  # Use default parameters, no grid search
             }
+            
+            # Filter models based on selection
+            if selected_models:
+                models = {name: model for name, model in models.items() if name in selected_models}
+                params = {name: param for name, param in params.items() if name in selected_models}
             
             # Train and evaluate each model with timing
             model_report = {}

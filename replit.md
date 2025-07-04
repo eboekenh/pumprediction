@@ -124,6 +124,8 @@ src/
 - July 04, 2025: Added realistic train-test splits and validation procedures for large-scale ML pipeline
 - July 04, 2025: Expanded algorithm selection to include 9 ML algorithms: Random Forest, XGBoost, LightGBM, CatBoost, SVM, Extra Trees, AdaBoost, KNN, and Neural Networks
 - July 04, 2025: Fixed Model Evaluation page import errors and added direct pickle loading for model artifacts
+- July 04, 2025: Converted interface language from Turkish to English throughout the application
+- July 04, 2025: Implemented dynamic model selection allowing users to choose specific algorithms to train
 
 ## Changelog
 - July 04, 2025. Initial setup
