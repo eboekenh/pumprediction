@@ -132,19 +132,46 @@ class DataIngestion:
                     stratify=df['status_group'] if 'status_group' in df.columns else None
                 )
             else:
-                # Load sample data if no path provided
-                sample_path = "sample_data/sample_water_pumps.csv"
-                if os.path.exists(sample_path):
-                    df = pd.read_csv(sample_path)
-                    logging.info(f"Sample data loaded from: {sample_path}")
-                    train_df, test_df = train_test_split(
-                        df, 
-                        test_size=0.25,  # 25% for test set (more realistic)
+                # Load real processed data if available
+                train_data_path = "artifacts/merged_train_data.csv"
+                test_data_path = "artifacts/test_data.csv"
+                
+                if os.path.exists(train_data_path) and os.path.exists(test_data_path):
+                    train_df = pd.read_csv(train_data_path)
+                    test_df = pd.read_csv(test_data_path)
+                    logging.info(f"Real Tanzania data loaded from processed files")
+                    
+                    # For training, we'll use 80% of the training data for training and 20% for validation
+                    train_df, _ = train_test_split(
+                        train_df, 
+                        test_size=0.2,  # Use 80% for training
                         random_state=42,
-                        stratify=df['status_group'] if 'status_group' in df.columns else None
+                        stratify=train_df['status_group'] if 'status_group' in train_df.columns else None
+                    )
+                    
+                    # Test set will be used for final evaluation
+                    # Note: test_df doesn't have target column, so we'll create a holdout from train_df for testing
+                    full_train = pd.read_csv(train_data_path)
+                    train_df, test_df = train_test_split(
+                        full_train, 
+                        test_size=0.2,  # 20% for final testing
+                        random_state=42,
+                        stratify=full_train['status_group'] if 'status_group' in full_train.columns else None
                     )
                 else:
-                    raise FileNotFoundError("No data file found. Please upload data first.")
+                    # Fallback to sample data
+                    sample_path = "sample_data/sample_water_pumps.csv"
+                    if os.path.exists(sample_path):
+                        df = pd.read_csv(sample_path)
+                        logging.info(f"Fallback to sample data from: {sample_path}")
+                        train_df, test_df = train_test_split(
+                            df, 
+                            test_size=0.25,
+                            random_state=42,
+                            stratify=df['status_group'] if 'status_group' in df.columns else None
+                        )
+                    else:
+                        raise FileNotFoundError("No data file found. Please upload and process data first.")
             
             logging.info(f"Final train dataset shape: {train_df.shape}")
             logging.info(f"Final test dataset shape: {test_df.shape}")

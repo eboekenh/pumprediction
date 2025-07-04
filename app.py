@@ -199,20 +199,49 @@ def main():
                 st.error(f"Error reading file: {str(e)}")
                 logging.error(f"Error reading uploaded file: {str(e)}")
         
-        # Sample data option
-        st.header("🎯 Sample Data")
-        if st.button("Load Sample Dataset"):
+        # Real Tanzania dataset option
+        st.header("🎯 Tanzania Water Pump Dataset")
+        if st.button("Load Real Tanzania Dataset", type="primary"):
             try:
-                sample_path = "sample_data/sample_water_pumps.csv"
-                if os.path.exists(sample_path):
-                    st.session_state.data_path = sample_path
-                    st.session_state.data_uploaded = True
-                    st.success("✅ Sample dataset loaded successfully!")
+                # Check if the processed data exists
+                train_data_path = "artifacts/merged_train_data.csv"
+                test_data_path = "artifacts/test_data.csv"
+                
+                if os.path.exists(train_data_path):
+                    # Store in session state
+                    st.session_state['data_uploaded'] = True
+                    st.session_state['train_data_path'] = train_data_path
+                    st.session_state['test_data_path'] = test_data_path
+                    
+                    # Load data to show summary
+                    df = pd.read_csv(train_data_path)
+                    
+                    st.success("✅ Tanzania water pump dataset loaded successfully!")
+                    
+                    # Show dataset summary
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Training Samples", f"{len(df):,}")
+                    with col2:
+                        st.metric("Features", f"{len(df.columns)-1}")
+                    with col3:
+                        if os.path.exists(test_data_path):
+                            test_df = pd.read_csv(test_data_path)
+                            st.metric("Test Samples", f"{len(test_df):,}")
+                    
+                    # Show target distribution
+                    if 'status_group' in df.columns:
+                        st.subheader("Target Distribution")
+                        target_counts = df['status_group'].value_counts()
+                        for status, count in target_counts.items():
+                            percentage = (count / len(df)) * 100
+                            st.write(f"**{status}**: {count:,} ({percentage:.1f}%)")
+                    
                     st.rerun()
                 else:
-                    st.warning("Sample dataset not found. Please upload your own data.")
+                    st.warning("Real dataset not found. Please process the uploaded files first using the upload option above.")
             except Exception as e:
-                st.error(f"Error loading sample data: {str(e)}")
+                st.error(f"Error loading real dataset: {str(e)}")
         
         # Footer
         st.markdown("---")

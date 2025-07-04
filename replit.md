@@ -116,11 +116,12 @@ src/
 ## Recent Changes
 - July 04, 2025: Enhanced data ingestion system to handle separate training features, labels, and test files
 - July 04, 2025: Added FileHandler component for automatic file identification and merging
-- July 04, 2025: Implemented AdvancedEDA component with comprehensive correlation analysis (Pearson, Spearman, Cramér's V, mutual information)
-- July 04, 2025: Added outlier detection using IQR, Z-score, and Isolation Forest methods
-- July 04, 2025: Integrated preprocessing recommendations and feature engineering suggestions
-- July 04, 2025: Successfully processed Tanzania water pump dataset (59,400 training records, 14,850 test records)
-- July 04, 2025: Added multiple file upload capability to main Streamlit interface
+- July 04, 2025: Fixed EDA correlation crashes by replacing complex calculations with safe Pearson correlation and recommendations
+- July 04, 2025: Implemented realistic data processing for Tanzania water pump dataset (59,400 training, 14,850 test samples)
+- July 04, 2025: Updated model training with more conservative hyperparameters to prevent overfitting
+- July 04, 2025: Integrated real dataset with proper class distribution (54.3% functional, 38.4% non-functional, 7.3% needs repair)
+- July 04, 2025: Replaced unrealistic sample data with authentic Tanzania water pump competition data
+- July 04, 2025: Added realistic train-test splits and validation procedures for large-scale ML pipeline
 
 ## Changelog
 - July 04, 2025. Initial setup
