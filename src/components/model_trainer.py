@@ -46,20 +46,20 @@ class ModelTrainer:
                 test_array[:, -1]
             )
             
-            # Define models with optimized parameters for large dataset
+            # Define models with optimized parameters for large dataset (faster training)
             models = {
                 "Random Forest": RandomForestClassifier(
-                    n_estimators=100,
-                    max_depth=15, 
-                    min_samples_split=10,
-                    min_samples_leaf=4,
+                    n_estimators=50,    # Reduced from 100 for faster training
+                    max_depth=10,       # Reduced from 15 for faster training
+                    min_samples_split=20,  # Increased for faster training
+                    min_samples_leaf=10,   # Increased for faster training
                     random_state=42, 
                     n_jobs=-1
                 ),
                 "XGBoost": XGBClassifier(
-                    n_estimators=100,
-                    max_depth=6,
-                    learning_rate=0.1,
+                    n_estimators=50,    # Reduced from 100 for faster training
+                    max_depth=4,        # Reduced from 6 for faster training
+                    learning_rate=0.2,  # Increased for faster convergence
                     subsample=0.8,
                     colsample_bytree=0.8,
                     random_state=42, 
@@ -98,20 +98,29 @@ class ModelTrainer:
             if best_model_score < 0.6:
                 raise CustomException("No best model found with acceptable performance")
             
-            # Train best model with best parameters
+            # Since we're using empty params (no grid search), just use the best model directly
             best_params = params[best_model_name]
             
-            # Perform grid search for best model
-            grid_search = GridSearchCV(
-                estimator=best_model,
-                param_grid=best_params,
-                cv=5,
-                scoring='accuracy',
-                n_jobs=-1
-            )
-            
-            grid_search.fit(X_train, y_train)
-            best_model_final = grid_search.best_estimator_
+            # If no parameters for grid search, use the model directly
+            if not best_params:
+                logging.info(f"Using {best_model_name} with default optimized parameters")
+                best_model_final = best_model
+                # Train the model
+                best_model_final.fit(X_train, y_train)
+                best_params_used = "Default optimized parameters"
+            else:
+                # Perform grid search for best model
+                grid_search = GridSearchCV(
+                    estimator=best_model,
+                    param_grid=best_params,
+                    cv=3,  # Reduced CV for faster training
+                    scoring='accuracy',
+                    n_jobs=-1
+                )
+                
+                grid_search.fit(X_train, y_train)
+                best_model_final = grid_search.best_estimator_
+                best_params_used = grid_search.best_params_
             
             # Make predictions
             y_pred = best_model_final.predict(X_test)
@@ -132,8 +141,8 @@ class ModelTrainer:
             # Save model report
             detailed_report = {
                 'model_name': best_model_name,
-                'best_params': grid_search.best_params_,
-                'best_score': grid_search.best_score_,
+                'best_params': best_params_used,
+                'best_score': best_model_score,
                 'accuracy': accuracy,
                 'f1_score': f1,
                 'model_report': model_report,
