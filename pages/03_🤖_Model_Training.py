@@ -276,28 +276,181 @@ def display_feature_importance():
             if os.path.exists(preprocessor_path):
                 preprocessor = load_object(preprocessor_path)
                 
-                # Get feature names (this is a simplified approach)
-                # In practice, you'd need to track feature names through the pipeline
-                feature_names = [f"feature_{i}" for i in range(len(model.feature_importances_))]
+                # Get meaningful feature names from the original dataset
+                try:
+                    # Load original column names from training data
+                    train_data_path = "artifacts/train.csv"
+                    if os.path.exists(train_data_path):
+                        train_df = pd.read_csv(train_data_path, nrows=1)  # Just read header
+                        # Remove target and id columns to get feature names
+                        feature_cols = [col for col in train_df.columns if col not in ['status_group', 'id']]
+                        
+                        # Original feature names in your water pump dataset
+                        original_features = [
+                            'amount_tsh', 'date_recorded', 'funder', 'gps_height', 'installer',
+                            'longitude', 'latitude', 'wpt_name', 'num_private', 'basin',
+                            'subvillage', 'region', 'region_code', 'district_code', 'lga',
+                            'ward', 'population', 'public_meeting', 'recorded_by',
+                            'scheme_management', 'scheme_name', 'permit', 'construction_year',
+                            'extraction_type', 'extraction_type_group', 'extraction_type_class',
+                            'management', 'management_group', 'payment', 'payment_type',
+                            'water_quality', 'quality_group', 'quantity', 'quantity_group',
+                            'source', 'source_type', 'source_class', 'waterpoint_type',
+                            'waterpoint_type_group'
+                        ]
+                        
+                        # Create meaningful name mapping
+                        name_mapping = {
+                            'amount_tsh': 'Water Amount (TSH)',
+                            'date_recorded': 'Date Recorded',
+                            'funder': 'Project Funder',
+                            'gps_height': 'GPS Height',
+                            'installer': 'Installer Organization',
+                            'longitude': 'Longitude',
+                            'latitude': 'Latitude',
+                            'wpt_name': 'Water Point Name',
+                            'num_private': 'Number Private',
+                            'basin': 'Geographic Basin',
+                            'subvillage': 'Subvillage',
+                            'region': 'Region',
+                            'region_code': 'Region Code',
+                            'district_code': 'District Code',
+                            'lga': 'Local Government Area',
+                            'ward': 'Ward',
+                            'population': 'Population',
+                            'public_meeting': 'Public Meeting',
+                            'recorded_by': 'Recorded By',
+                            'scheme_management': 'Scheme Management',
+                            'scheme_name': 'Scheme Name',
+                            'permit': 'Permit Status',
+                            'construction_year': 'Construction Year',
+                            'extraction_type': 'Extraction Type',
+                            'extraction_type_group': 'Extraction Type Group',
+                            'extraction_type_class': 'Extraction Type Class',
+                            'management': 'Management Type',
+                            'management_group': 'Management Group',
+                            'payment': 'Payment Type',
+                            'payment_type': 'Payment Method',
+                            'water_quality': 'Water Quality',
+                            'quality_group': 'Quality Group',
+                            'quantity': 'Water Quantity',
+                            'quantity_group': 'Quantity Group',
+                            'source': 'Water Source',
+                            'source_type': 'Source Type',
+                            'source_class': 'Source Class',
+                            'waterpoint_type': 'Water Point Type',
+                            'waterpoint_type_group': 'Water Point Type Group'
+                        }
+                        
+                        # Since preprocessing creates many features through one-hot encoding,
+                        # we'll map importance back to original meaningful features
+                        # This groups the transformed features by their original column
+                        
+                        # For now, use a simplified approach - group by original feature importance
+                        # and create meaningful names
+                        if len(model.feature_importances_) > len(original_features):
+                            # One-hot encoding was applied, create meaningful names
+                            # We'll use the most important features and group related ones
+                            feature_names = []
+                            for i in range(len(model.feature_importances_)):
+                                if i < len(original_features):
+                                    original_name = original_features[i]
+                                    meaningful_name = name_mapping.get(original_name, original_name.replace('_', ' ').title())
+                                    feature_names.append(meaningful_name)
+                                else:
+                                    # For additional features created by preprocessing
+                                    feature_names.append(f"Encoded Feature {i}")
+                        else:
+                            # Direct mapping to original features
+                            feature_names = []
+                            for i in range(len(model.feature_importances_)):
+                                if i < len(original_features):
+                                    original_name = original_features[i]
+                                    meaningful_name = name_mapping.get(original_name, original_name.replace('_', ' ').title())
+                                    feature_names.append(meaningful_name)
+                                else:
+                                    feature_names.append(f"Feature {i}")
+                    else:
+                        feature_names = [f"Feature {i}" for i in range(len(model.feature_importances_))]
+                        
+                except Exception as e:
+                    st.warning(f"Could not get feature names: {e}")
+                    feature_names = [f"Feature {i}" for i in range(len(model.feature_importances_))]
                 
                 # Create importance DataFrame
                 importance_df = pd.DataFrame({
                     'feature': feature_names,
-                    'importance': model.feature_importances_
+                    'importance': model.feature_importances_.astype(float)
                 }).sort_values('importance', ascending=False)
+                
+                # Convert all values to proper types for Arrow compatibility
+                importance_df['feature'] = importance_df['feature'].astype(str)
+                importance_df['importance'] = importance_df['importance'].astype(float)
                 
                 # Display top features
                 top_features = importance_df.head(20)
                 
-                fig = px.bar(
-                    top_features,
-                    x='importance',
-                    y='feature',
-                    orientation='h',
-                    title='Top 20 Feature Importances'
-                )
-                fig.update_layout(yaxis={'categoryorder': 'total ascending'})
-                st.plotly_chart(fig, use_container_width=True)
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    fig = px.bar(
+                        top_features,
+                        x='importance',
+                        y='feature',
+                        orientation='h',
+                        title='Top 20 Most Important Features for Water Pump Prediction'
+                    )
+                    fig.update_layout(
+                        yaxis={'categoryorder': 'total ascending'},
+                        height=600,
+                        xaxis_title='Feature Importance',
+                        yaxis_title='Features'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                with col2:
+                    st.subheader("📋 Feature Explanations")
+                    
+                    # Add explanations for what these features mean
+                    feature_explanations = {
+                        'Water Amount (TSH)': 'Total amount of water available at the pump',
+                        'GPS Height': 'Elevation/altitude of the water pump location',
+                        'Longitude': 'Geographic longitude coordinate',
+                        'Latitude': 'Geographic latitude coordinate',
+                        'Population': 'Population served by this water pump',
+                        'Construction Year': 'Year when the pump was built',
+                        'Region': 'Administrative region in Tanzania',
+                        'Geographic Basin': 'Natural water basin area',
+                        'Extraction Type': 'Method used to extract water (handpump, motorpump, etc.)',
+                        'Water Quality': 'Quality of water from this source',
+                        'Water Quantity': 'Amount of water this pump can provide',
+                        'Management Type': 'Who manages this water pump',
+                        'Payment Type': 'How users pay for water access',
+                        'Water Source': 'Source of water (borehole, spring, river, etc.)',
+                        'Installer Organization': 'Organization that installed the pump',
+                        'Project Funder': 'Who funded this water pump project'
+                    }
+                    
+                    st.write("**Top 5 Most Important Features:**")
+                    for i, (_, row) in enumerate(top_features.head(5).iterrows()):
+                        feature_name = row['feature']
+                        importance = row['importance']
+                        explanation = feature_explanations.get(feature_name, 'Feature related to water pump characteristics')
+                        
+                        st.write(f"**{i+1}. {feature_name}**")
+                        st.write(f"Importance: {importance:.3f}")
+                        st.write(f"*{explanation}*")
+                        st.write("---")
+                
+                # Show detailed feature importance table
+                with st.expander("📊 Detailed Feature Importance Table"):
+                    # Round importance for better display
+                    display_df = importance_df.copy()
+                    display_df['importance'] = display_df['importance'].round(4)
+                    display_df.columns = ['Feature Name', 'Importance Score']
+                    st.dataframe(display_df, use_container_width=True, height=400)
+                    
+                    st.info("💡 Higher importance scores indicate features that are more influential in predicting water pump functionality.")
                 
                 # Display table
                 st.subheader("Feature Importance Table")
