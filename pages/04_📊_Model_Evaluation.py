@@ -35,12 +35,12 @@ def display_model_performance():
     model_path = "artifacts/model.pkl"
     if not os.path.exists(model_path):
         st.warning("⚠️ No trained model found. Please train a model first.")
-        return
+        return None, None, None
     
     train_arr, test_arr = load_preprocessed_data()
     if train_arr is None or test_arr is None:
         st.warning("⚠️ No preprocessed data found. Please preprocess data first.")
-        return
+        return None, None, None
     
     try:
         # Load model
@@ -419,32 +419,39 @@ def main():
         return
     
     # Load and display model performance
-    model, y_test, y_pred_test = display_model_performance()
+    result = display_model_performance()
     
-    if model is not None and y_test is not None and y_pred_test is not None:
-        # Evaluation tabs
-        tabs = st.tabs([
-            "Confusion Matrix",
-            "Classification Report",
-            "Cross-Validation",
-            "Model Comparison",
-            "Diagnostics"
-        ])
+    if result is not None and len(result) == 3:
+        model, y_test, y_pred_test = result
         
-        with tabs[0]:
-            display_confusion_matrix(y_test, y_pred_test)
-        
-        with tabs[1]:
-            display_classification_report(y_test, y_pred_test)
-        
-        with tabs[2]:
-            display_cross_validation_results()
-        
-        with tabs[3]:
-            display_model_comparison()
-        
-        with tabs[4]:
-            display_model_diagnostics()
+        if model is not None and y_test is not None and y_pred_test is not None:
+            # Evaluation tabs
+            tabs = st.tabs([
+                "Confusion Matrix",
+                "Classification Report",
+                "Cross-Validation",
+                "Model Comparison",
+                "Diagnostics"
+            ])
+            
+            with tabs[0]:
+                display_confusion_matrix(y_test, y_pred_test)
+            
+            with tabs[1]:
+                display_classification_report(y_test, y_pred_test)
+            
+            with tabs[2]:
+                display_cross_validation_results()
+            
+            with tabs[3]:
+                display_model_comparison()
+            
+            with tabs[4]:
+                display_model_diagnostics()
+        else:
+            st.warning("⚠️ Model evaluation data not available.")
+    else:
+        st.warning("⚠️ Unable to load model evaluation data.")
     
     # Export evaluation results
     st.subheader("📥 Export Results")
