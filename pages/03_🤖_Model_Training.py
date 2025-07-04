@@ -148,8 +148,19 @@ def run_model_training(data_path, selected_models, tuning_method, cv_folds, tuni
                 st.subheader("🎯 Best Parameters")
                 best_params = model_report.get('best_params', {})
                 if best_params:
-                    params_df = pd.DataFrame(list(best_params.items()), columns=['Parameter', 'Value'])
-                    st.dataframe(params_df, use_container_width=True)
+                    try:
+                        # Check if best_params is a dictionary
+                        if isinstance(best_params, dict):
+                            params_df = pd.DataFrame(list(best_params.items()), columns=['Parameter', 'Value'])
+                            st.dataframe(params_df, use_container_width=True)
+                        else:
+                            # If it's a string or other type, display as text
+                            st.write(f"Parameters: {best_params}")
+                    except Exception as e:
+                        st.error(f"Error displaying parameters: {str(e)}")
+                        st.write(f"Parameters: {best_params}")
+                else:
+                    st.info("No hyperparameter tuning was performed. Default parameters were used.")
                 
                 # Display model comparison
                 st.subheader("📈 Model Comparison")

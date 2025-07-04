@@ -149,7 +149,8 @@ class ModelTrainer:
                 best_model_final = best_model
                 # Train the model
                 best_model_final.fit(X_train, y_train)
-                best_params_used = "Default optimized parameters"
+                # Get the actual parameters used by the model
+                best_params_used = best_model_final.get_params()
             else:
                 # Perform grid search for best model
                 grid_search = GridSearchCV(

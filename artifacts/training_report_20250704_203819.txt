@@ -1,0 +1,82 @@
+================================================================================
+WATER PUMP FUNCTIONALITY PREDICTION - TRAINING REPORT
+================================================================================
+
+Training Date: 2025-07-04 20:38:15
+Training Duration: 3.9 seconds (0.1 minutes)
+
+DATASET INFORMATION
+----------------------------------------
+training_samples: 47520
+test_samples: 11880
+total_features: 341
+target_classes: 3
+
+MODEL PERFORMANCE COMPARISON
+----------------------------------------
+Summary Table:
+Model                Accuracy   F1-Score   Precision  Recall     Time(s)   
+----------------------------------------------------------------------
+Random Forest        0.7476     0.7156     0.7693     0.7476     0.83      
+XGBoost              0.7623     0.7411     0.7695     0.7623     1.30      
+
+DETAILED RESULTS - RANDOM FOREST
+--------------------------------------------------
+Training Accuracy: 0.7505
+Test Accuracy: 0.7476
+Precision (weighted): 0.7693
+Recall (weighted): 0.7476
+F1-Score (weighted): 0.7156
+Training Time: 0.83 seconds
+Hyperparameters:
+  n_estimators: 50
+  max_depth: 10
+  random_state: 42
+Per-Class Performance:
+  0.0: Precision=0.7008, Recall=0.9608, F1=0.8104, Support=6452.0
+  1.0: Precision=0.6491, Recall=0.0429, F1=0.0804, Support=863.0
+  2.0: Precision=0.8888, Recall=0.5796, F1=0.7017, Support=4565.0
+  macro avg: Precision=0.7462, Recall=0.5278, F1=0.5308, Support=11880.0
+  weighted avg: Precision=0.7693, Recall=0.7476, F1=0.7156, Support=11880.0
+Confusion Matrix:
+  [6199, 9, 244]
+  [739, 37, 87]
+  [1908, 11, 2646]
+
+DETAILED RESULTS - XGBOOST
+--------------------------------------------------
+Training Accuracy: 0.7692
+Test Accuracy: 0.7623
+Precision (weighted): 0.7695
+Recall (weighted): 0.7623
+F1-Score (weighted): 0.7411
+Training Time: 1.30 seconds
+Hyperparameters:
+  n_estimators: 50
+  max_depth: 4
+  random_state: 42
+Per-Class Performance:
+  0.0: Precision=0.7309, Recall=0.9285, F1=0.8179, Support=6452.0
+  1.0: Precision=0.6905, Recall=0.1344, F1=0.2250, Support=863.0
+  2.0: Precision=0.8390, Recall=0.6460, F1=0.7300, Support=4565.0
+  macro avg: Precision=0.7534, Recall=0.5697, F1=0.5910, Support=11880.0
+  weighted avg: Precision=0.7695, Recall=0.7623, F1=0.7411, Support=11880.0
+Confusion Matrix:
+  [5991, 26, 435]
+  [616, 116, 131]
+  [1590, 26, 2949]
+
+BEST MODEL SELECTION
+----------------------------------------
+Best Model: XGBoost
+Best Score: 0.7623
+
+RECOMMENDATIONS
+----------------------------------------
+• Good model performance achieved (70-80% accuracy)
+• Model is ready for deployment
+• Regular retraining recommended with new data
+
+================================================================================
+End of Report
+================================================================================
