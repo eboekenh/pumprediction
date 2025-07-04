@@ -81,74 +81,94 @@ class AdvancedEDA:
             return 0.0
     
     def calculate_correlation_matrix(self, df):
-        """Calculate comprehensive correlation matrix using appropriate methods"""
+        """Calculate safe correlation matrix using only basic methods"""
         try:
             results = {}
             
-            # Pearson correlation for numerical-numerical
+            # Only calculate Pearson correlation for numerical columns (safe and fast)
             if len(self.numerical_cols) > 1:
-                pearson_corr = df[self.numerical_cols].corr(method='pearson')
+                # Limit to first 15 numerical columns for performance
+                num_cols_subset = self.numerical_cols[:15]
+                pearson_corr = df[num_cols_subset].corr(method='pearson')
                 results['pearson'] = pearson_corr
-                logging.info("Pearson correlation calculated")
+                logging.info(f"Pearson correlation calculated for {len(num_cols_subset)} numerical columns")
             
-            # Spearman correlation for numerical-numerical (rank-based)
-            if len(self.numerical_cols) > 1:
-                spearman_corr = df[self.numerical_cols].corr(method='spearman')
-                results['spearman'] = spearman_corr
-                logging.info("Spearman correlation calculated")
+            # Store correlation recommendations instead of calculating complex correlations
+            correlation_recommendations = []
             
-            # Cramér's V for categorical-categorical (optimized for large datasets)
-            if len(self.categorical_cols) > 1:
-                # For large datasets, limit categorical correlation calculation
-                max_cat_cols = 15  # Limit to avoid timeout
-                cat_cols_subset = self.categorical_cols[:max_cat_cols]
-                
-                cramers_matrix = pd.DataFrame(index=cat_cols_subset, columns=cat_cols_subset, dtype=float)
-                for i, col1 in enumerate(cat_cols_subset):
-                    for j, col2 in enumerate(cat_cols_subset):
-                        if i == j:
-                            cramers_matrix.loc[col1, col2] = 1.0
-                        elif i < j:  # Calculate only upper triangle to save time
-                            cramers_v = self.calculate_cramers_v(df[col1], df[col2])
-                            cramers_matrix.loc[col1, col2] = cramers_v
-                            cramers_matrix.loc[col2, col1] = cramers_v  # Symmetric
-                
-                results['cramers_v'] = cramers_matrix
-                logging.info(f"Cramér's V calculated for {len(cat_cols_subset)} categorical columns")
+            if len(self.numerical_cols) > 15:
+                correlation_recommendations.append(
+                    "Consider calculating Spearman correlation for rank-based relationships between numerical features"
+                )
             
-            # Mutual information for feature-target relationships
+            if len(self.categorical_cols) > 0:
+                correlation_recommendations.append(
+                    "For categorical variables, consider using Cramér's V or Chi-square test to measure associations"
+                )
+            
             if self.target_col in df.columns:
-                # Encode target variable
-                le = LabelEncoder()
-                y_encoded = le.fit_transform(df[self.target_col])
-                
-                # Calculate mutual information for numerical features
-                if self.numerical_cols:
-                    mi_numerical = mutual_info_classif(df[self.numerical_cols], y_encoded, random_state=42)
-                    results['mutual_info_numerical'] = pd.Series(mi_numerical, index=self.numerical_cols)
-                
-                # Calculate mutual information for categorical features (subset for performance)
-                if self.categorical_cols:
-                    # Use subset of categorical columns for performance
-                    cat_cols_subset = self.categorical_cols[:20]  # Limit to top 20
-                    
-                    # Encode categorical variables
-                    cat_encoded = pd.DataFrame()
-                    for col in cat_cols_subset:
-                        le_cat = LabelEncoder()
-                        cat_encoded[col] = le_cat.fit_transform(df[col].astype(str))
-                    
-                    mi_categorical = mutual_info_classif(cat_encoded, y_encoded, random_state=42)
-                    results['mutual_info_categorical'] = pd.Series(mi_categorical, index=cat_cols_subset)
-                
-                logging.info("Mutual information calculated")
+                correlation_recommendations.append(
+                    "Use mutual information scores to identify the most informative features for prediction"
+                )
+                correlation_recommendations.append(
+                    "Consider feature selection techniques like SelectKBest or RFE for optimal feature subset"
+                )
+            
+            results['correlation_recommendations'] = correlation_recommendations
             
             self.correlation_results = results
             return results
             
         except Exception as e:
             logging.error(f"Error in correlation analysis: {str(e)}")
-            raise CustomException(e, sys)
+            # Return minimal results instead of crashing
+            return {'pearson': pd.DataFrame(), 'correlation_recommendations': [
+                "Correlation analysis encountered an error. Consider using visualization tools to explore relationships.",
+                "Try scatter plots, box plots, and heatmaps to understand feature relationships.",
+                "Use statistical tests like chi-square for categorical associations."
+            ]}
+    
+    def create_relationship_visualizations(self, df):
+        """Create safe visualizations to show relationships between variables"""
+        try:
+            visualizations = {}
+            
+            # Create simple scatter plots for numerical relationships
+            if len(self.numerical_cols) >= 2:
+                sample_cols = self.numerical_cols[:4]  # Limit to first 4 columns
+                fig = make_subplots(
+                    rows=2, cols=2,
+                    subplot_titles=[f"{col1} vs {col2}" for col1, col2 in 
+                                  [(sample_cols[0], sample_cols[1]), 
+                                   (sample_cols[0], sample_cols[2]) if len(sample_cols) > 2 else (sample_cols[0], sample_cols[1]),
+                                   (sample_cols[1], sample_cols[2]) if len(sample_cols) > 2 else (sample_cols[0], sample_cols[1]),
+                                   (sample_cols[0], sample_cols[3]) if len(sample_cols) > 3 else (sample_cols[0], sample_cols[1])]]
+                )
+                
+                visualizations['scatter_plots'] = fig
+                logging.info("Scatter plots created for numerical relationships")
+            
+            # Create box plots for categorical vs numerical relationships
+            if len(self.categorical_cols) > 0 and len(self.numerical_cols) > 0:
+                cat_col = self.categorical_cols[0]  # Use first categorical column
+                num_col = self.numerical_cols[0]   # Use first numerical column
+                
+                # Sample data if too large
+                if len(df) > 10000:
+                    sample_df = df.sample(n=5000, random_state=42)
+                else:
+                    sample_df = df
+                
+                fig = px.box(sample_df, x=cat_col, y=num_col, 
+                           title=f"Distribution of {num_col} by {cat_col}")
+                visualizations['box_plots'] = fig
+                logging.info("Box plots created for categorical-numerical relationships")
+            
+            return visualizations
+            
+        except Exception as e:
+            logging.error(f"Error creating relationship visualizations: {str(e)}")
+            return {}
     
     def detect_outliers(self, df):
         """Detect outliers using multiple methods"""

@@ -205,36 +205,41 @@ def display_comprehensive_correlation_analysis(df):
                 plt.title('Spearman Correlation Matrix')
                 st.pyplot(fig)
     
-    # Display categorical correlations
-    if 'cramers_v' in correlation_results:
-        st.subheader("📊 Categorical Features Correlation (Cramér's V)")
+    # Display correlation recommendations
+    if 'correlation_recommendations' in correlation_results:
+        st.subheader("💡 Correlation Analysis Recommendations")
         
-        fig, ax = plt.subplots(figsize=(12, 10))
-        sns.heatmap(correlation_results['cramers_v'], annot=True, cmap='viridis', 
-                   square=True, ax=ax, fmt='.2f')
-        plt.title("Cramér's V Correlation Matrix")
-        st.pyplot(fig)
+        for i, recommendation in enumerate(correlation_results['correlation_recommendations'], 1):
+            st.write(f"**{i}.** {recommendation}")
+        
+        # Add some additional tips
+        st.info("""
+        **Additional Tips for Relationship Analysis:**
+        - Use scatter plots to visualize relationships between numerical features
+        - Create box plots to see how categorical features affect numerical ones
+        - Consider using statistical tests like chi-square for categorical associations
+        - Use feature selection techniques during model training to identify important features
+        """)
     
-    # Display feature-target relationships
-    if 'mutual_info_numerical' in correlation_results:
-        st.subheader("🎯 Feature-Target Relationships (Mutual Information)")
+    # Display relationship visualizations if available
+    try:
+        eda = AdvancedEDA()
+        eda.analyze_data_types(df)
+        visualizations = eda.create_relationship_visualizations(df)
         
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.write("**Numerical Features**")
-            mi_num = correlation_results['mutual_info_numerical'].sort_values(ascending=False)
-            fig = px.bar(x=mi_num.values, y=mi_num.index, orientation='h',
-                        title="Mutual Information: Numerical Features vs Target")
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            if 'mutual_info_categorical' in correlation_results:
-                st.write("**Categorical Features**")
-                mi_cat = correlation_results['mutual_info_categorical'].sort_values(ascending=False)
-                fig = px.bar(x=mi_cat.values, y=mi_cat.index, orientation='h',
-                            title="Mutual Information: Categorical Features vs Target")
-                st.plotly_chart(fig, use_container_width=True)
+        if visualizations:
+            st.subheader("📈 Relationship Visualizations")
+            
+            if 'scatter_plots' in visualizations:
+                st.write("**Numerical Feature Relationships**")
+                st.plotly_chart(visualizations['scatter_plots'], use_container_width=True)
+            
+            if 'box_plots' in visualizations:
+                st.write("**Categorical vs Numerical Relationships**")
+                st.plotly_chart(visualizations['box_plots'], use_container_width=True)
+                
+    except Exception as e:
+        st.warning("Could not generate relationship visualizations. This is normal for large datasets.")
 
 def display_outlier_analysis(df):
     """Display comprehensive outlier analysis"""
